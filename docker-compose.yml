@@ -1,0 +1,14 @@
+version: '3.7'
+services:
+  bot:
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "5000:5000"
+      - "6969:6969"
+    working_dir: /bot
+    volumes:
+      - ./sounds:/sounds
+    command: ["python", "src/main.py"]
+
