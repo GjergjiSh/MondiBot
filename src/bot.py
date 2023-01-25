@@ -1,11 +1,10 @@
 import asyncio
-import json
 import os.path
 from typing import Any, Coroutine, Optional
 
 from discord import FFmpegPCMAudio, Game, Message, Reaction, VoiceClient, VoiceChannel, Intents
 from discord.ext.commands import Bot
-from flask import Flask, Response
+from flask import Flask, Response, render_template, request, redirect, url_for
 
 from messages import *
 from playlists import *
@@ -14,7 +13,7 @@ from threading import Thread
 
 
 class MondiBot(Bot):
-    def __init__(self,sounds_dir: str = "../sounds", command_prefix="*", intents=Intents.all()):
+    def __init__(self, sounds_dir: str = "../sounds", command_prefix="*", intents=Intents.all()):
 
         super().__init__(command_prefix=command_prefix, intents=intents)
 
@@ -28,6 +27,7 @@ class MondiBot(Bot):
         self.logger: logging.Logger = configure_logger("MondiBot")
 
         self.api = Flask("MondiBot")
+        self.api.template_folder = os.path.join(os.path.dirname(__file__), "templates")
         self.api_thread: Thread = None
         self.api.add_url_rule("/trigger/<audio_file>", "play", self.play, methods=["GET"])
         self.api.add_url_rule("/sounds/", "sounds", self.sounds, methods=["GET"])
@@ -36,7 +36,7 @@ class MondiBot(Bot):
         self.voice_client: VoiceClient = None
         self.voice_channel: VoiceChannel = None
 
-        self.command_mapiing = {
+        self.command_mapping = {
             f"{self.command_prefix}join": self.join,
             f"{self.command_prefix}leave": self.leave,
             f"{self.command_prefix}alma": self.alma,
@@ -61,8 +61,8 @@ class MondiBot(Bot):
         self.logger.info(f'Message from {user}: {user_message} in {channel}')
 
         cmd: str = user_message.lower().split(" ")[0]
-        if cmd in self.command_mapiing:
-            await self.command_mapiing[cmd](message)
+        if cmd in self.command_mapping:
+            await self.command_mapping[cmd](message)
 
     async def join(self, ctx: Context):
         if ctx.author.voice:
@@ -189,11 +189,11 @@ class MondiBot(Bot):
         self.voice_client.play(source)
         self.logger.info(f"Playing {audio_file}")
 
-        return Response(f"Playing sound: {audio_file}", status=200)
+        return redirect("/sounds")
 
     def sounds(self):
         if not os.path.exists(self.sounds_dir):
             return Response("The sounds directory does not exist", status=500)
 
         sounds = [file_name[:-4] for file_name in os.listdir(self.sounds_dir) if file_name.endswith(".mp3")]
-        return Response(json.dumps(sounds), status=200)
+        return Response(render_template("sounds.html", mp3_files=sounds), status=200)

@@ -1,0 +1,211 @@
+<!-- sounds.html template -->
+{#<table>#}
+{#  {% for file in mp3_files %}#}
+{#    <tr>#}
+{#      <td>{{ file }}</td>#}
+{#      <td>#}
+{#        <form method="GET" action="{{ url_for('trigger_sound', sound=file) }}">#}
+{#          <input type="submit" value="Trigger">#}
+{#        </form>#}
+{#      </td>#}
+{#    </tr>#}
+{#  {% endfor %}#}
+{#</table>#}
+
+{#<table>#}
+{#  <thead>#}
+{#    <tr>#}
+{#      <th>File Name</th>#}
+{#    </tr>#}
+{#  </thead>#}
+{#  <tbody>#}
+{#    {% for file_name in mp3_files %}#}
+{#    <tr>#}
+{#      <td>{{ file_name }}</td>#}
+{#    </tr>#}
+{#    {% endfor %}#}
+{#  </tbody>#}
+{#</table>#}
+
+
+{#<table>#}
+{#  <thead>#}
+{#    <tr>#}
+{#      <th>File Name</th>#}
+{#      <th>Play</th>#}
+{#    </tr>#}
+{#  </thead>#}
+{#  <tbody>#}
+{#    {% for file_name in mp3_files %}#}
+{#    <tr>#}
+{#      <td>{{ file_name }}</td>#}
+{#      <td><button onclick="playSound('{{ url_for('play', audio_file=file_name) }}')">Play</button></td>#}
+{#    </tr>#}
+{#    {% endfor %}#}
+{#  </tbody>#}
+{#</table>#}
+
+{#<table>#}
+{#  <thead>#}
+{#    <tr>#}
+{#      <th>File Name</th>#}
+{#      <th>Play</th>#}
+{#    </tr>#}
+{#  </thead>#}
+{#  <tbody>#}
+{#    {% for file_name in mp3_files %}#}
+{#    <tr>#}
+{#      <td>{{ file_name }}</td>#}
+{#      <td><form action="{{url_for('play', audio_file=file_name)}}" method="get">#}
+{#          <input type="submit" value="Play">#}
+{#        </form>#}
+{#      </td>#}
+{#    </tr>#}
+{#    {% endfor %}#}
+{#  </tbody>#}
+{#</table>#}
+
+{#<style>#}
+{#    table {#}
+{#        margin: 0 auto; /* center the table horizontally */#}
+{#        width: 100%; /* make the table fill up the entire screen */#}
+{#    }#}
+{#</style>#}
+{##}
+{#<table>#}
+{#  <thead>#}
+{#    <tr>#}
+{#      <th>File Name</th>#}
+{#      <th>Play</th>#}
+{#    </tr>#}
+{#  </thead>#}
+{#  <tbody>#}
+{#    {% for file_name in mp3_files %}#}
+{#    <tr>#}
+{#      <td>{{ file_name }}</td>#}
+{#      <td><form action="{{url_for('play', audio_file=file_name)}}" method="get">#}
+{#          <input type="submit" value="Play">#}
+{#        </form>#}
+{#      </td>#}
+{#    </tr>#}
+{#    {% endfor %}#}
+{#  </tbody>#}
+{#</table>#}
+
+{#<table>#}
+{#  <thead>#}
+{#    <tr>#}
+{#      <th>File Name</th>#}
+{#      <th>Play</th>#}
+{#    </tr>#}
+{#  </thead>#}
+{#  <tbody>#}
+{#    {% for file_name in mp3_files %}#}
+{#    <tr>#}
+{#      <td>{{ file_name }}</td>#}
+{#      <td>#}
+{#        <form action="{{url_for('play', audio_file=file_name)}}" method="get">#}
+{#          <input type="submit" value="{{ file_name }}">#}
+{#        </form>#}
+{#      </td>#}
+{#    </tr>#}
+{#    {% endfor %}#}
+{#  </tbody>#}
+{#</table>#}
+
+{#<table>#}
+{#  <tbody>#}
+{#    {% for file_name in mp3_files %}#}
+{#    <tr>#}
+{#      <td>#}
+{#        <form action="{{url_for('play', audio_file=file_name)}}" method="get">#}
+{#          <input type="submit" value="{{ file_name }}">#}
+{#        </form>#}
+{#      </td>#}
+{#    </tr>#}
+{#    {% endfor %}#}
+{#  </tbody>#}
+{#</table>#}
+
+{#<style>#}
+{#    table {#}
+{#    display: grid;#}
+{#    grid-template-columns: repeat(3, 1fr); /* split the buttons into 3 columns */#}
+{#    grid-gap: 1em; /* add some space between the buttons */#}
+{#    margin:0 auto;#}
+{#    width:90%;#}
+{#}#}
+{##}
+{#input[type="submit"] {#}
+{#    background-color: blue; /* set the background color of the buttons to blue */#}
+{#    color: white; /* set the text color of the buttons to white */#}
+{#    padding: 1em; /* set the padding of the buttons */#}
+{#    border: none; /* remove the border */#}
+{#    width: 100%; /* make the buttons fill the entire cell */#}
+{#}#}
+{#</style>#}
+{##}
+{##}
+{#<div style="text-align: center;">#}
+{#<table>#}
+{#  <tbody>#}
+{#    {% for file_name in mp3_files %}#}
+{#    <tr>#}
+{#      <td>#}
+{#        <form action="{{url_for('play', audio_file=file_name)}}" method="get">#}
+{#          <input type="submit" value="{{ file_name }}" class="btn btn-primary" style="width:100%;">#}
+{#        </form>#}
+{#      </td>#}
+{#    </tr>#}
+{#    {% endfor %}#}
+{#  </tbody>#}
+{#</table>#}
+{#</div>#}
+
+{#<div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; height: 100vh;">#}
+{#    {% for file_name in mp3_files %}#}
+{#        <form action="{{url_for('play', audio_file=file_name)}}" method="get">#}
+{#          <input type="submit" value="{{ file_name }}" class="btn btn-primary" style="flex: 1; margin: 5px;">#}
+{#        </form>#}
+{#    {% endfor %}#}
+{#</div>#}
+
+{#<div style="display:grid;grid-template-columns: repeat(3, 1fr);grid-gap: 1em;height: 100vh;">#}
+{#    {% for file_name in mp3_files %}#}
+{#        <form action="{{url_for('play', audio_file=file_name)}}" method="get">#}
+{#          <input type="submit" value="{{ file_name }}" class="btn btn-primary" style="width:100%;">#}
+{#        </form>#}
+{#    {% endfor %}#}
+{#</div>#}
+
+{#<div style="display:grid;grid-template-columns: repeat(3, 1fr);grid-gap: 0;height: 100vh;">#}
+{#    {% for file_name in mp3_files %}#}
+{#        <form action="{{url_for('play', audio_file=file_name)}}" method="get">#}
+{#          <input type="submit" value="{{ file_name }}" class="btn btn-primary" style="width:100%;">#}
+{#        </form>#}
+{#    {% endfor %}#}
+{#</div>#}
+
+{#<div style="display:grid;grid-template-columns: repeat(3, 1fr);grid-gap: 1em;height: 100vh;">#}
+{#    {% for file_name in mp3_files %}#}
+{#        <form action="{{url_for('play', audio_file=file_name)}}" method="get">#}
+{#          <input type="submit" value="{{ file_name }}" class="btn btn-primary" style="width:100%; padding:0; margin:0;">#}
+{#        </form>#}
+{#    {% endfor %}#}
+{#</div>#}
+
+{#<div style="display:grid;grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); height: 100vh;">#}
+{#    {% for file_name in mp3_files %}#}
+{#        <form action="{{url_for('play', audio_file=file_name)}}" method="get">#}
+{#          <input type="submit" value="{{ file_name }}" class="btn btn-primary" style="width:100%; height: 100%;">#}
+{#        </form>#}
+{#    {% endfor %}#}
+{#</div>#}
+
+<div style="display:grid;grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); height: 100vh;">
+    {% for file_name in mp3_files %}
+        <form action="{{url_for('play', audio_file=file_name)}}" method="get">
+          <input type="submit" value="{{ file_name }}" class="btn btn-primary" style="width:100%; height: 100%; white-space: nowrap;">
+        </form>
+    {% endfor %}
+</div>
