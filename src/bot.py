@@ -44,9 +44,12 @@ class MondiBot(Bot):
         }
 
     async def on_ready(self):
-        self.logger.info('Logged on as {0}!'.format(self.user))
+        self.logger.info("Logged on as {self.user}!")
+        self.api_thread = Thread(target=self.api.run, args=(
+            os.getenv("FS_HOST"),
+            os.getenv("FS_PORT"))
+        )
 
-        self.api_thread = Thread(target=self.api.run, args=("0.0.0.0",))
         self.api_thread.daemon = True
         self.api_thread.start()
         await self.change_presence(activity=Game(name="with Alma's bean"))
