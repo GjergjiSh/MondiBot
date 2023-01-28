@@ -9,6 +9,6 @@ services:
       - "6969:6969"
     working_dir: /bot
     volumes:
-      - ./sounds:/sounds
+      - ./sounds:/bot/sounds
     command: ["python", "src/main.py"]
 
