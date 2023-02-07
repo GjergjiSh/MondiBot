@@ -11,6 +11,8 @@ from playlists import *
 from utils import *
 from threading import Thread
 
+from vc_controls import VoiceClientControl
+
 
 class MondiBot(Bot):
     def __init__(self, sounds_dir: str = "../sounds", command_prefix="*", intents=Intents.all()):
@@ -20,6 +22,7 @@ class MondiBot(Bot):
         self.pl_finder = PlaylistFinder()
         self.playlist_control_task: Optional[asyncio.Task] = None
         self.playlist: Playlist = None
+        self.vc_controls = VoiceClientControl()
 
         self.command_prefix: str = command_prefix
         self.sounds_dir = sounds_dir
@@ -33,8 +36,6 @@ class MondiBot(Bot):
         self.api.add_url_rule("/sounds/", "sounds", self.sounds, methods=["GET"])
 
         self.ctx: Context = None
-        self.voice_client: VoiceClient = None
-        self.voice_channel: VoiceChannel = None
 
         self.command_mapping = {
             f"{self.command_prefix}join": self.join,
@@ -70,26 +71,18 @@ class MondiBot(Bot):
     async def join(self, ctx: Context):
         if ctx.author.voice:
             self.ctx = ctx
-            self.voice_channel = ctx.author.voice.channel
-            self.voice_client = await self.voice_channel.connect()
+            await self.vc_controls.connect(ctx.author.voice.channel)
         else:
             self.logger.warning("You are not connected to a voice channel")
 
     async def leave(self, ctx: Context):
         if ctx.author.voice:
-            await self.voice_client.disconnect(force=True)
-            self.voice_channel = None
+            await self.vc_controls.disconnect()
             self.ctx = None
-            self.logger.info(f"Left voice channel: {self.voice_channel}")
         else:
             self.logger.warning("The bot is not connected to a voice channel")
 
     async def get_playlist(self, ctx: Message) -> Coroutine[Any, Any, None] | None:
-        if self.voice_client is None:
-            self.logger.warning("No context provided. The bot might not be connected to"
-                                " a voice channel. The playlist will not be played")
-            return
-
         channel = ctx.channel
         playlist_id = ctx.content.split(" ")[1]
 
@@ -110,29 +103,7 @@ class MondiBot(Bot):
         self.playlist_control_task = asyncio.create_task(self.control_playlist())
         await message.delete()
 
-    def stop_voice_client(self) -> None:
-        if self.voice_client.is_playing():
-            self.logger.info("Stopping voice client")
-            self.voice_client.stop()
-
-    def play_sound(self, source) -> None:
-        self.stop_voice_client()
-        self.logger.info(f"Playing sound: {source}")
-        self.voice_client.play(FFmpegPCMAudio(source))
-
-    def play_pause_voice_client(self) -> None:
-        if self.voice_client.is_playing():
-            self.logger.info("Pausing voice client")
-            self.voice_client.pause()
-        else:
-            self.logger.info("Resuming voice client")
-            self.voice_client.resume()
-
     async def control_playlist(self):
-        if self.voice_client is None:
-            self.logger.warning("The bot has no voice client. It may not connected to a voice channel")
-            return
-
         if self.playlist is None:
             self.logger.warning("No playlist has been loaded")
             await self.ctx.channel.send("No playlist has been loaded. Please use"
@@ -151,15 +122,15 @@ class MondiBot(Bot):
                 reaction, _ = await self.wait_for('reaction_add', check=check)
                 emoji = str(reaction.emoji)
                 if emoji == '🔀':
-                    self.play_sound(self.playlist.pick_random_song())
+                    self.vc_controls.play(self.playlist.pick_random_song())
                 elif emoji == '⏮':
-                    self.play_sound(self.playlist.prev_song())
+                    self.vc_controls.play(self.playlist.prev_song())
                 elif emoji == '⏭':
-                    self.play_sound(self.playlist.next_song())
+                    self.vc_controls.play(self.playlist.next_song())
                 elif emoji == '⏯':
-                    self.play_pause_voice_client()
+                    self.vc_controls.toggle_play()
                 elif emoji == '⏹':
-                    self.stop_voice_client()
+                    self.vc_controls.stop()
                     await message.delete()
                     self.playlist = None
                     self.playlist_control_task.cancel()
@@ -179,18 +150,8 @@ class MondiBot(Bot):
         await channel.send(f"Almen e ngopi: {user.mention}")
 
     def play(self, audio_file: str):
-        if self.voice_client is None:
-            msg = "The bot has no voice client. It bot may not connected to a voice channel"
-            self.logger.warning(msg)
-            return Response(msg, status=500)
-
-        if self.voice_client.is_playing() or audio_file == "stop":
-            self.voice_client.stop()
-
-        audio_file_path = os.path.join(self.sounds_dir, audio_file) + ".mp3"
-        source = FFmpegPCMAudio(audio_file_path)
-        self.voice_client.play(source)
-        self.logger.info(f"Playing {audio_file}")
+        source = os.path.join(self.sounds_dir, audio_file) + ".mp3"
+        self.vc_controls.play(source)
 
         return redirect("/sounds")
 
