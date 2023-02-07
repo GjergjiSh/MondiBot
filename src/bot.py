@@ -16,7 +16,6 @@ from vc_controls import VoiceClientControl
 
 class MondiBot(Bot):
     def __init__(self, sounds_dir, command_prefix="*", intents=Intents.all()):
-
         super().__init__(command_prefix=command_prefix, intents=intents)
 
         self.pl_finder = PlaylistFinder()
@@ -24,9 +23,7 @@ class MondiBot(Bot):
         self.playlist: Playlist = None
         self.vc_controls = VoiceClientControl()
 
-        self.command_prefix: str = command_prefix
         self.sounds_dir = sounds_dir
-
         self.logger: logging.Logger = configure_logger("MondiBot")
 
         self.api = Flask("MondiBot")
