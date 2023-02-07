@@ -15,7 +15,7 @@ from vc_controls import VoiceClientControl
 
 
 class MondiBot(Bot):
-    def __init__(self, sounds_dir: str = "../sounds", command_prefix="*", intents=Intents.all()):
+    def __init__(self, sounds_dir, command_prefix="*", intents=Intents.all()):
 
         super().__init__(command_prefix=command_prefix, intents=intents)
 
@@ -31,7 +31,6 @@ class MondiBot(Bot):
 
         self.api = Flask("MondiBot")
         self.api.template_folder = os.path.join(os.path.dirname(__file__), "templates")
-        self.api_thread: Thread = None
         self.api.add_url_rule("/trigger/<audio_file>", "play", self.play, methods=["GET"])
         self.api.add_url_rule("/sounds/", "sounds", self.sounds, methods=["GET"])
 
@@ -46,13 +45,13 @@ class MondiBot(Bot):
 
     async def on_ready(self):
         self.logger.info("Logged on as {self.user}!")
-        self.api_thread = Thread(target=self.api.run, args=(
+        api_thread = Thread(target=self.api.run, args=(
             os.getenv("FS_HOST"),
             os.getenv("FS_PORT"))
         )
 
-        self.api_thread.daemon = True
-        self.api_thread.start()
+        api_thread.daemon = True
+        api_thread.start()
         await self.change_presence(activity=Game(name="with Alma's bean"))
 
     async def on_message(self, message: Message):
@@ -106,8 +105,6 @@ class MondiBot(Bot):
     async def control_playlist(self):
         if self.playlist is None:
             self.logger.warning("No playlist has been loaded")
-            await self.ctx.channel.send("No playlist has been loaded. Please use"
-                                        "the download command to load a playlist")
             return
 
         message = await send_playlist_message(self.playlist, self.ctx)
