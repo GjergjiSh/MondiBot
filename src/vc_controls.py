@@ -1,9 +1,9 @@
-from typing import Callable, Any
+import functools
+import logging
 
 from discord import VoiceClient, VoiceChannel, FFmpegPCMAudio
+
 from utils import configure_logger
-import logging
-import functools
 
 
 def safe_exec(func):

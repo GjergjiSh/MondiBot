@@ -1,6 +1,8 @@
-from bot import MondiBot
-from dotenv import load_dotenv
 import os
+
+from dotenv import load_dotenv
+
+from bot import MondiBot
 
 if __name__ == '__main__':
     load_dotenv()

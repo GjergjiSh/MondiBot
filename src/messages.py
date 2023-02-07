@@ -1,6 +1,7 @@
-from playlists import Playlist
 from discord import Embed
 from discord.ext.commands import Context
+
+from playlists import Playlist
 
 
 async def send_playlist_message(playlist: Playlist, ctx: Context):

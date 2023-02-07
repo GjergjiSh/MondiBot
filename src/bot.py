@@ -1,16 +1,15 @@
 import asyncio
 import os.path
+from threading import Thread
 from typing import Any, Coroutine, Optional
 
-from discord import FFmpegPCMAudio, Game, Message, Reaction, VoiceClient, VoiceChannel, Intents
+from discord import Game, Message, Reaction, Intents
 from discord.ext.commands import Bot
-from flask import Flask, Response, render_template, request, redirect, url_for
+from flask import Flask, Response, render_template, redirect
 
 from messages import *
 from playlists import *
 from utils import *
-from threading import Thread
-
 from vc_controls import VoiceClientControl
 
 
