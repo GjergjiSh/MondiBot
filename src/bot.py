@@ -11,6 +11,7 @@ from messages import *
 from playlists import *
 from utils import *
 from vc_controls import VoiceClientControl
+import requests
 
 
 class MondiBot(Bot):
@@ -36,7 +37,8 @@ class MondiBot(Bot):
             f"{self.command_prefix}join": self.join,
             f"{self.command_prefix}leave": self.leave,
             f"{self.command_prefix}alma": self.alma,
-            f"{self.command_prefix}playlist": self.get_playlist
+            f"{self.command_prefix}playlist": self.get_playlist,
+            f"{self.command_prefix}download_soundbit": self.download_soundbit
         }
 
     async def on_ready(self):
@@ -85,13 +87,13 @@ class MondiBot(Bot):
             await channel.send("No playlist id provided")
             return
 
-        await self.start_playlist_in_channel(channel, playlist_id)
+        self.playlist = self.pl_finder.get_playlist(playlist_id)
+        await self.start_playlist_in_channel(channel)
 
-    async def start_playlist_in_channel(self, channel, playlist_id) -> None:
+    async def start_playlist_in_channel(self, channel) -> None:
         message: Message = await channel.send("Searching for the songs in the spotify playlist "
                                               "on youtube. This might take a while...")
 
-        self.playlist = self.pl_finder.get_playlist(playlist_id)
         self.playlist_control_task = asyncio.create_task(self.control_playlist())
         await message.delete()
 
@@ -145,6 +147,17 @@ class MondiBot(Bot):
 
         sounds = [file_name[:-4] for file_name in os.listdir(self.sounds_dir) if file_name.endswith(".mp3")]
         return Response(render_template("sounds.html", mp3_files=sounds), status=200)
+
+    async def download_soundbit(self, message: Message):
+        split_message = message.content.split(" ")
+        url = split_message[1]
+        name = split_message[2]
+        response = requests.get(url)
+        file_path = os.path.join(self.sounds_dir, f"{name}.mp3")
+        with open(file_path, "wb") as soundbit:
+            soundbit.write(response.content)
+
+        self.logger.info(f"Downloaded soundbit {name} from {url}")
 
     async def alma(self, ctx: Context):
         users = list(ctx.guild.members)
