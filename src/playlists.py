@@ -1,6 +1,5 @@
 import random
 from dataclasses import dataclass
-from typing import Dict
 
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
@@ -11,42 +10,42 @@ from utils import *
 
 @dataclass
 class Song:
-    def __init__(self, title, source, spotify_title=None):
-        self.title = title
-        self.source = source
-        self.spotify_title = spotify_title
+    name: str
+    artists: list[str]
+    webpage_url: str
+    url: str
+
+    def __init__(self, name: str, artists: list[str] = None,
+                 webpage_url=None, url=None):
+        self.name = name
+        self.artists = artists
+        self.webpage_url = webpage_url
+        self.url = url
 
 
 @dataclass
 class Playlist:
     def __init__(self, name: str, songs: list[Song]):
         self.name = name
-        self.current_song = 0
+        self.songs = songs
+        self.current_song = self.songs[0]
         self.logger = configure_logger("Playlist")
-        self.songs: dict[str, str] = {}
-        for song in songs:
-            self.songs[song.title] = song.source
 
-    def pick_random_song(self) -> str:
-        song_title = random.choice(list(self.songs.keys()))
-        song_source = self.songs[song_title]
-        self.current_song = list(self.songs.keys()).index(song_title)
-        self.logger.info(f"Playlist {self.name} - song index: {self.current_song} title: {song_title}")
-        return song_source
+    def pick_random_song(self) -> Song:
+        self.current_song = random.choice(self.songs)
+        return self.current_song
 
-    def next_song(self) -> str:
-        song_titles = list(self.songs.keys())
-        self.current_song = (self.current_song + 1) % len(song_titles)
-        song_title = song_titles[self.current_song]
-        self.logger.info(f"Playlist {self.name} - song index: {self.current_song} title: {song_title}")
-        return self.songs[song_title]
+    def next_song(self) -> Song:
+        current_song_idx = self.songs.index(self.current_song)
+        next_song_idx = (current_song_idx + 1) % len(self.songs)
+        self.current_song = self.songs[next_song_idx]
+        return self.current_song
 
-    def prev_song(self) -> str:
-        song_titles = list(self.songs.keys())
-        self.current_song = (self.current_song - 1) % len(song_titles)
-        song_title = song_titles[self.current_song]
-        self.logger.info(f"Playlist {self.name} - song index: {self.current_song} title: {song_title}")
-        return self.songs[song_title]
+    def prev_song(self) -> Song:
+        current_song_idx = self.songs.index(self.current_song)
+        prev_song_index = (current_song_idx - 1) % len(self.songs)
+        self.current_song = self.songs[prev_song_index]
+        return self.current_song
 
 
 class PlaylistFinder:
@@ -55,30 +54,51 @@ class PlaylistFinder:
         self.sp = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
         self.logger = configure_logger("PlaylistFinder")
 
-    def find_sp_playlist(self, username, playlist_id) -> tuple[str, str]:
-        results = self.sp.user_playlist(username, playlist_id)
-        songs = results["tracks"]["items"]
-        playlist_name = results["name"]
+    def get_playlist(self, playlist_id: str) -> Playlist:
+        # Find the spotify playlist
+        search_results = self.sp.playlist(playlist_id)
+        playlist_name = search_results["name"]
+        if not search_results:
+            raise RuntimeWarning(f"Failed to find the playlist for {playlist_id}")
 
-        # TODO Artist
-        # for song in songs:
-        #     self.logger.info(song["track"]["name"])
+        # For each song in the spotify playlist
+        songs = []
+        for song in search_results["tracks"]["items"]:
+            song_name = song["track"]["name"]
+            song_artists = [artist["name"] for artist in song["track"]["artists"]]
 
-        return playlist_name, songs
+            # Find a matching counterpart in YouTube
+            with YoutubeDL() as vdl:
+                # Add the artists to the search string
+                search_artists = " ".join(song_artists)
+                yt_matches = vdl.extract_info(
+                    f"ytsearch:{song_name} {search_artists}",
+                    download=False)
 
-    def find_yt_songs(self, spotify_songs) -> list[Song]:
-        youtube_songs: list[Song] = []
-        for song in spotify_songs:
-            spotify_song_title: str = song["track"]["name"]
+            if yt_matches:
+                # Remove the entry if it's not a Music video
+                matches = yt_matches['entries']
+                for idx, match in enumerate(matches):
+                    categories = match["categories"]
+                    if "Music" not in categories:
+                        matches.pop(idx)
 
-            with YoutubeDL(self.vdl_options) as ydl:
-                try:
-                    info: Dict = ydl.extract_info("ytsearch:%s" % spotify_song_title, download=False)['entries'][0]
-                    song_source: str = info['formats'][0]['url']
-                    song_title: str = info['title']
-                    self.logger.info(f"Found {song_title} in youtube for spotify song {spotify_song_title}.")
-                    youtube_songs.append(Song(song_title, song_source, spotify_song_title))
-                except Exception:
-                    self.logger.error(f"Error when searching for {spotify_song_title} in youtube.", exc_info=True)
+                # Add the song to the list
+                if matches:
+                    name = matches[0]["title"]
+                    webpage_url = matches[0]['webpage_url']
+                    url = matches[0]['formats'][0]['url']
+                    songs.append(Song(name, song_artists, webpage_url, url))
 
-        return youtube_songs
+        return Playlist(playlist_name, songs)
+
+
+if __name__ == "__main__":
+    pl_finder = PlaylistFinder()
+    playlist = pl_finder.get_playlist("1kOdZWDxeOIkQR20HIvLyf")
+    for song in playlist.songs:
+        print(song)
+
+    print(playlist.pick_random_song())
+    print(playlist.next_song())
+    print(playlist.prev_song())

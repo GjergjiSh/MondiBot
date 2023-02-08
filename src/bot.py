@@ -40,11 +40,10 @@ class MondiBot(Bot):
         }
 
     async def on_ready(self):
-        self.logger.info("Logged on as {self.user}!")
-        api_thread = Thread(target=self.api.run, args=(
-            os.getenv("FS_HOST"),
-            os.getenv("FS_PORT"))
-        )
+        self.logger.info("Mondibot is ready!")
+        api_thread = Thread(target=self.api.run,
+                            args=(os.getenv("FS_HOST"),
+                                  os.getenv("FS_PORT")))
 
         api_thread.daemon = True
         api_thread.start()
@@ -92,9 +91,7 @@ class MondiBot(Bot):
         message: Message = await channel.send("Searching for the songs in the spotify playlist "
                                               "on youtube. This might take a while...")
 
-        playlist_name, songs = self.pl_finder.find_sp_playlist(os.getenv("SPOTIPY_USER_ID"), playlist_id)
-        youtube_songs = self.pl_finder.find_yt_songs(songs)
-        self.playlist = Playlist(playlist_name, youtube_songs)
+        self.playlist = self.pl_finder.get_playlist(playlist_id)
         self.playlist_control_task = asyncio.create_task(self.control_playlist())
         await message.delete()
 
@@ -115,11 +112,11 @@ class MondiBot(Bot):
                 reaction, _ = await self.wait_for('reaction_add', check=check)
                 emoji = str(reaction.emoji)
                 if emoji == '🔀':
-                    self.vc_controls.play(self.playlist.pick_random_song())
+                    self.vc_controls.play(self.playlist.pick_random_song().url)
                 elif emoji == '⏮':
-                    self.vc_controls.play(self.playlist.prev_song())
+                    self.vc_controls.play(self.playlist.prev_song().url)
                 elif emoji == '⏭':
-                    self.vc_controls.play(self.playlist.next_song())
+                    self.vc_controls.play(self.playlist.next_song().url)
                 elif emoji == '⏯':
                     self.vc_controls.toggle_play()
                 elif emoji == '⏹':
@@ -136,12 +133,6 @@ class MondiBot(Bot):
 
             await asyncio.sleep(1)
 
-    async def alma(self, ctx: Context):
-        users = list(ctx.guild.members)
-        user = random.choice(users)
-        channel = ctx.channel
-        await channel.send(f"Almen e ngopi: {user.mention}")
-
     def play(self, audio_file: str):
         source = os.path.join(self.sounds_dir, audio_file) + ".mp3"
         self.vc_controls.play(source)
@@ -154,3 +145,9 @@ class MondiBot(Bot):
 
         sounds = [file_name[:-4] for file_name in os.listdir(self.sounds_dir) if file_name.endswith(".mp3")]
         return Response(render_template("sounds.html", mp3_files=sounds), status=200)
+
+    async def alma(self, ctx: Context):
+        users = list(ctx.guild.members)
+        user = random.choice(users)
+        channel = ctx.channel
+        await channel.send(f"Almen e ngopi: {user.mention}")
